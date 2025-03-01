@@ -1,0 +1,42 @@
+name: Build Libraries
+run-name: Build ${{ github.event.inputs.solution }} (${{ github.event.inputs.platform }} ${{ github.event.inputs.configuration }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        type: choice
+        options:
+          - x86
+          - x64
+      configuration:
+        type: string
+        required: true
+        default: Release
+      solution:
+        type: string
+        required: true
+        default: dnSpy-Unity-mono-v2018.x-V40.sln
+
+jobs:
+  build:
+    runs-on: windows-2019
+    name: Build ${{ github.event.inputs.solution }} (${{ github.event.inputs.platform }} ${{ github.event.inputs.configuration }})
+
+    steps:
+      - uses: microsoft/setup-msbuild@v2
+      - uses: actions/checkout@v4
+        with:
+          repository: aspriddell/dnSpy-Unity-mono
+          submodules: true
+          ref: dnSpy
+
+      - name: Perform Build
+        run: msbuild ${{ github.event.inputs.solution }} /p:Configuration=${{ github.event.inputs.configuration }} /p:Platform=${{ github.event.inputs.platform }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 9
+          name: build-output
+          path: builds
