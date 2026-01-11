@@ -35,7 +35,7 @@ jobs:
         name: Build output name
         run: |
           echo "name=${SOLUTION_NAME::-3}-${{ matrix.platform }}-${{ matrix.configuration }}" >> $GITHUB_OUTPUT
-        environment:
+        env:
           SOLUTION_NAME: ${{ matrix.solution }}
 
       - name: Perform Build
