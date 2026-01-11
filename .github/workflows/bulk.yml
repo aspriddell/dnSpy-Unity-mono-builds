@@ -1,0 +1,49 @@
+name: Build All Versions
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    name: Build ${{ matrix.solution }} (${{ matrix.platform }} ${{ matrix.configuration }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ['x86', 'x64']
+        configuration: ['Release', 'Release_eglib']
+        solution:
+          - dnSpy-Unity-mono-v4.x.sln
+          - dnSpy-Unity-mono-v5.x.sln
+          - dnSpy-Unity-mono-v2017.x.sln
+          - dnSpy-Unity-mono-v2017.x-V40.sln
+          - dnSpy-Unity-mono-v2018.x.sln
+          - dnSpy-Unity-mono-v2018.x-V40.sln
+          - dnSpy-Unity-mono-v2019.x.sln
+          - dnSpy-Unity-mono-v2019.x-V40.sln
+
+    steps:
+      - uses: microsoft/setup-msbuild@v2
+      - uses: actions/checkout@v4
+        with:
+          repository: aspriddell/dnSpy-Unity-mono
+          submodules: true
+          ref: dnSpy
+
+      - id: output-naming
+        name: Build output name
+        run: |
+          echo "name=${SOLUTION_NAME::-3}-${{ matrix.platform }}-${{ matrix.configuration }}" >> $GITHUB_OUTPUT
+        environment:
+          SOLUTION_NAME: ${{ matrix.solution }}
+
+      - name: Perform Build
+        run: msbuild ${{ matrix.solution }} /p:Configuration=${{ matrix.configuration }} /p:Platform=${{ matrix.platform }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 9
+          name: ${{ steps.output-naming.outputs.name }}
+          path: builds
